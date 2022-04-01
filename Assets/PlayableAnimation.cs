@@ -5,6 +5,8 @@ using UnityEngine.Playables;
 
 public class PlayableAnimation : MonoBehaviour
 {
+    private AniState curState = AniState.Empty;
+
     public enum AniState
     { 
         Empty = -1,
@@ -31,6 +33,7 @@ public class PlayableAnimation : MonoBehaviour
 
     AnimationLayerMixerPlayable m_layerMixerPlayable;
     AnimationClipPlayable attackClipPlayable;
+
     private void Start()
     {
         PlayableGraph graph = PlayableGraph.Create("ChanPlayableGraph");
@@ -44,7 +47,6 @@ public class PlayableAnimation : MonoBehaviour
         m_upMixerPlayable.ConnectInput(0, attackClipPlayable, 0);
         m_upMixerPlayable.ConnectInput(1, standClipClipPlayable, 0);
         attackClipPlayable.SetSpeed(attackClip.length);
-
 
         m_downMixerPlayable = AnimationMixerPlayable.Create(graph, 1);
         var runClipPlayable = AnimationClipPlayable.Create(graph, runClip);
@@ -60,8 +62,15 @@ public class PlayableAnimation : MonoBehaviour
         graph.Play();
     }
 
-    private void Update()
+
+    public void ChangState(AniState state)
     {
+        if (curState == state)
+            return;
+        Debug.Log(state);
+
+        curState = state;
+
         switch (state)
         {
             case AniState.Idle:
@@ -78,7 +87,6 @@ public class PlayableAnimation : MonoBehaviour
                 break;
             case AniState.Only_Attack:
                 PlayOnlyAttack();
-                state = AniState.Empty;
                 break;
             case AniState.Empty:
                 break;
@@ -86,6 +94,38 @@ public class PlayableAnimation : MonoBehaviour
                 PlayIdle();
                 break;
         }
+    }
+
+    private void Update2()
+    {
+       
+        switch (state)
+        {
+            case AniState.Idle:
+                PlayIdle();
+                break;
+            case AniState.Run:
+                PlayRun();
+                break;
+            case AniState.Idle_Attack:
+                PlayIdleAttack();
+                //state = AniState.Empty;
+                break;
+            case AniState.Run_Attack:
+                PlayRunAttack();
+                //state = AniState.Empty;
+                break;
+            case AniState.Only_Attack:
+                PlayOnlyAttack();
+                //state = AniState.Empty;
+                break;
+            case AniState.Empty:
+                break;
+            default:
+                PlayIdle();
+                break;
+        }
+        //Debug.Log(attackClipPlayable.GetPlayState());
     }
 
     void PlayIdle()
@@ -109,14 +149,14 @@ public class PlayableAnimation : MonoBehaviour
         m_layerMixerPlayable.SetInputWeight(0, 1.0f);
         m_layerMixerPlayable.SetInputWeight(1, 0);
 
-        //attackClipPlayable.SetTime(0);
+        attackClipPlayable.SetTime(0);
         m_upMixerPlayable.SetInputWeight(0, 1.0f);
         m_upMixerPlayable.SetInputWeight(1, 0);
     }
 
     void PlayIdleAttack()
     {
-        PlayRunAttack();
+        PlayOnlyAttack();
     }
 
     void PlayRunAttack()
@@ -125,7 +165,7 @@ public class PlayableAnimation : MonoBehaviour
         m_layerMixerPlayable.SetLayerMaskFromAvatarMask(1, footAvatarMask);
         m_layerMixerPlayable.SetInputWeight(1, 1.0f);
 
-        //attackClipPlayable.SetTime(0);
+        attackClipPlayable.SetTime(0);
         m_upMixerPlayable.SetInputWeight(0, 1.0f);
         m_upMixerPlayable.SetInputWeight(1, 0);
      
